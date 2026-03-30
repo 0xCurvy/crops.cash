@@ -1,0 +1,15 @@
+### IntelliJ IDEA ###
+.idea/*
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Build ###
+build/
+node_modules/
+
+### Env ###
+.env

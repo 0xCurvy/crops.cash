@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>crops.cash — Private Payments for Agents</title>
+<meta name="description" content="Privacy-first CLI for crypto payments via the Curvy protocol. Shielded balances, untraceable payments, ZK-powered.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root {
+  --black: #0a0a08;
+  --black-light: #12120e;
+  --black-lighter: #1a1a14;
+  --orange: #D97706;
+  --orange-dim: #b8650580;
+  --orange-glow: #D9770640;
+  --orange-bright: #F59E0B;
+  --orange-muted: #92510a;
+  --wheat: #c9a84c;
+  --wheat-dim: #c9a84c30;
+  --green: #4ade80;
+  --gray: #555544;
+  --gray-light: #888870;
+  --text: #ccccaa;
+  --text-dim: #888870;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--orange);
+  color: var(--black);
+}
+
+/* ── ASCII WHEAT BACKGROUND ── */
+#wheat-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.12;
+}
+
+#wheat-canvas {
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  line-height: 1.15;
+  color: var(--orange);
+  white-space: pre;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.5;
+}
+
+/* ── LAYOUT ── */
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero-badge {
+  display: inline-block;
+  border: 1px solid var(--orange-dim);
+  padding: 0.3rem 1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.2s;
+}
+
+.hero-title {
+  color: var(--orange);
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.4s;
+  filter: drop-shadow(0 0 40px var(--orange-glow)) drop-shadow(0 0 80px var(--orange-glow));
+}
+
+.hero-title pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.35rem, 1.15vw, 0.85rem);
+  line-height: 1.1;
+  margin: 0;
+  color: var(--orange);
+}
+
+.hero-title .cash-suffix {
+  display: block;
+  text-align: right;
+  font-size: clamp(0.9rem, 2.5vw, 1.6rem);
+  font-weight: 300;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  margin-top: 0.25rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hero-sub {
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  color: var(--text-dim);
+  font-weight: 300;
+  max-width: 520px;
+  margin: 1rem auto 2.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.6s;
+}
+
+.hero-cta {
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.8s;
+}
+
+.hero-cta code {
+  background: var(--black-lighter);
+  border: 1px solid var(--orange-dim);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  color: var(--orange-bright);
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.hero-cta code:hover {
+  border-color: var(--orange);
+  box-shadow: 0 0 30px var(--orange-glow), inset 0 0 30px var(--orange-glow);
+}
+
+.hero-cta code::before {
+  content: '$ ';
+  color: var(--gray);
+}
+
+.hero-cta .hint,
+.hero-agent-box .hint {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--gray);
+  margin-top: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.hero-agent-box {
+  margin-top: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 1s;
+}
+
+.hero-agent-box .agent-label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 0.5rem;
+}
+
+.hero-agent-box code {
+  background: var(--black-lighter);
+  border: 1px dashed var(--orange-dim);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+.hero-agent-box code:hover {
+  border-color: var(--orange);
+  color: var(--text);
+  box-shadow: 0 0 20px var(--orange-glow);
+}
+
+.scroll-indicator {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  color: var(--gray);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 1.2s;
+  transition: opacity 0.4s ease;
+}
+
+.scroll-indicator.hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.scroll-indicator::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 30px;
+  background: var(--orange-dim);
+  margin: 0.5rem auto 0;
+  animation: pulse-line 2s ease-in-out infinite;
+}
+
+/* ── TERMINAL SECTION ── */
+.terminal-section {
+  padding: 6rem 2rem;
+  min-height: auto;
+}
+
+.terminal {
+  background: var(--black-light);
+  border: 1px solid var(--orange-dim);
+  max-width: 720px;
+  margin: 0 auto;
+  overflow: hidden;
+  box-shadow: 0 0 80px var(--orange-glow), 0 4px 60px rgba(0,0,0,0.5);
+}
+
+.terminal-bar {
+  background: var(--black-lighter);
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--orange-dim);
+}
+
+.terminal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange-muted);
+}
+
+.terminal-dot:nth-child(2) { opacity: 0.6; }
+.terminal-dot:nth-child(3) { opacity: 0.3; }
+
+.terminal-title {
+  font-size: 0.65rem;
+  color: var(--gray-light);
+  margin-left: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.terminal-body {
+  padding: 1.5rem;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  min-height: 320px;
+}
+
+.terminal-body .prompt {
+  color: var(--orange);
+}
+
+.terminal-body .cmd {
+  color: var(--text);
+}
+
+.terminal-body .output {
+  color: var(--gray-light);
+}
+
+.terminal-body .success {
+  color: var(--green);
+}
+
+.terminal-body .comment {
+  color: var(--gray);
+  font-style: italic;
+}
+
+.terminal-body .line {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.terminal-body .line.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--orange);
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* ── CROPS ACRONYM ── */
+.crops-section {
+  padding: 8rem 2rem;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 3rem;
+}
+
+.crops-grid {
+  display: grid;
+  gap: 0;
+}
+
+.crop-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 2rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--orange-dim);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.crop-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.crop-letter {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--orange);
+  line-height: 1;
+  width: 60px;
+  text-shadow: 0 0 40px var(--orange-glow);
+}
+
+.crop-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+
+.crop-content p {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-weight: 300;
+  max-width: 500px;
+}
+
+/* ── PRIVACY SECTION ── */
+.privacy-section {
+  padding: 8rem 2rem;
+  position: relative;
+}
+
+.privacy-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, var(--orange-dim));
+}
+
+.privacy-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: var(--orange-dim);
+  margin-top: 2.5rem;
+}
+
+.privacy-card {
+  background: var(--black-light);
+  padding: 2rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.privacy-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.privacy-card h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--orange);
+  margin-bottom: 0.75rem;
+}
+
+.privacy-card h3::before {
+  content: '// ';
+  color: var(--gray);
+}
+
+.privacy-card p {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── FLOW SECTION ── */
+.flow-section {
+  padding: 8rem 2rem;
+}
+
+.flow-steps {
+  margin-top: 2.5rem;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.5s ease;
+}
+
+.flow-step.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.flow-num {
+  font-size: 0.7rem;
+  color: var(--orange);
+  font-weight: 600;
+  padding-top: 0.15rem;
+}
+
+.flow-text {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 300;
+}
+
+.flow-text strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.flow-arrow {
+  grid-column: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+  color: var(--gray);
+  font-size: 0.7rem;
+}
+
+/* ── COMMANDS SECTION ── */
+.commands-section {
+  padding: 8rem 2rem;
+}
+
+.commands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--orange-dim);
+  margin-top: 2.5rem;
+}
+
+.command-card {
+  background: var(--black-light);
+  padding: 1.75rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+
+.command-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.command-card .cmd-name {
+  font-size: 0.9rem;
+  color: var(--orange-bright);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.command-card .cmd-name::before {
+  content: '$ ';
+  color: var(--gray);
+}
+
+.command-card p {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── COMPAT SECTION ── */
+.compat-section {
+  padding: 8rem 2rem;
+  text-align: center;
+}
+
+.compat-badge {
+  display: inline-block;
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 0.3rem 1rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+
+.compat-title {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.compat-title span {
+  color: var(--orange);
+}
+
+.compat-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 300;
+  max-width: 520px;
+  margin: 0 auto 2.5rem;
+}
+
+.compat-coming {
+  font-size: 0.7rem;
+  color: var(--gray);
+  letter-spacing: 0.1em;
+}
+
+/* ── DOCS LINK ── */
+.docs-section {
+  padding: 6rem 2rem;
+  text-align: center;
+}
+
+.docs-link {
+  display: inline-block;
+  border: 1px solid var(--orange-dim);
+  padding: 1rem 2.5rem;
+  color: var(--orange);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.docs-link:hover {
+  border-color: var(--orange);
+  background: var(--orange-glow);
+  box-shadow: 0 0 40px var(--orange-glow);
+}
+
+.docs-link::before {
+  content: '> ';
+  color: var(--gray);
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 3rem 2rem;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--gray);
+  letter-spacing: 0.05em;
+  border-top: 1px solid var(--orange-dim);
+}
+
+footer a {
+  color: var(--orange-muted);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--orange);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@keyframes pulse-line {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  section { padding: 4rem 1.25rem; }
+  .crop-item { grid-template-columns: 1fr; gap: 0.5rem; }
+  .crop-letter { font-size: 2rem; width: auto; }
+  .terminal-body { padding: 1rem; font-size: 0.7rem; }
+  .privacy-cards,
+  .commands-grid { grid-template-columns: 1fr; }
+  .flow-step { grid-template-columns: 30px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ASCII WHEAT BACKGROUND -->
+<div id="wheat-bg">
+  <div id="wheat-canvas"></div>
+</div>
+
+<div class="content">
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-badge">Privacy layer for agentic payments</div>
+    <h1 class="hero-title">
+<pre>
+ ██████╗██████╗  ██████╗ ██████╗ ███████╗
+██╔════╝██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+██║     ██████╔╝██║   ██║██████╔╝███████╗
+██║     ██╔══██╗██║   ██║██╔═══╝ ╚════██║
+╚██████╗██║  ██║╚██████╔╝██║     ███████║
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚══════╝
+</pre>
+      <span class="cash-suffix">.cash</span>
+    </h1>
+    <p class="hero-sub">Shielded payments for autonomous agents. Powered by zero-knowledge proofs. Your funds are invisible. Your identity, untraceable.</p>
+    <div class="hero-cta">
+      <code id="install-cmd">npx crops.cash@latest onboard</code>
+      <span class="hint">click to copy</span>
+    </div>
+    <div class="hero-agent-box">
+      <span class="agent-label">for your agent</span>
+      <code id="agent-cmd">Hey Claude, this is how to transact privately: https://crops.cash/skill.md</code>
+      <span class="hint">click to copy</span>
+    </div>
+    <div class="scroll-indicator">SCROLL</div>
+  </section>
+
+  <!-- ── TERMINAL DEMO ── -->
+  <section class="terminal-section">
+    <div class="container">
+      <div class="terminal" id="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <span class="terminal-title">crops.cash</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <div class="line"><span class="comment"># onboard &mdash; create your shielded wallet</span></div>
+          <div class="line"><span class="prompt">$ </span><span class="cmd">npx crops.cash@latest onboard</span></div>
+          <div class="line"><span class="output">Opening https://app.curvy.box/auth ...</span></div>
+          <div class="line"><span class="success">Wallet created at ~/.crops.cash/wallet.json</span></div>
+          <div class="line">&nbsp;</div>
+          <div class="line"><span class="comment"># check your shielded balances</span></div>
+          <div class="line"><span class="prompt">$ </span><span class="cmd">npx crops.cash@latest balance</span></div>
+          <div class="line"><span class="output">{ "Base.USDC": "150000000", "Ethereum.ETH": "500000000000000000" }</span></div>
+          <div class="line">&nbsp;</div>
+          <div class="line"><span class="comment"># send privately &mdash; source is untraceable</span></div>
+          <div class="line"><span class="prompt">$ </span><span class="cmd">npx crops.cash@latest send</span></div>
+          <div class="line"><span class="output">Destination: alice.curvy.name</span></div>
+          <div class="line"><span class="output">Amount: 10 USDC on Base</span></div>
+          <div class="line"><span class="success">Transfer complete. Fully private.</span></div>
+          <div class="line">&nbsp;</div>
+          <div class="line"><span class="prompt">$ </span><span class="cursor-blink"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CROPS ACRONYM ── -->
+  <section class="crops-section">
+    <div class="container">
+      <div class="section-label">// Core Principles &mdash; borrowed from the Ethereum Foundation mandate</div>
+      <p style="font-size:0.8rem;color:var(--text-dim);font-weight:300;max-width:560px;margin-bottom:2.5rem;">CROPS is the acronym the Ethereum Foundation uses for its core mandate: Censorship Resistance, Open source and free, Privacy, and Security. crops.cash adopts the same principles as its foundation.</p>
+      <div class="crops-grid">
+        <div class="crop-item" data-reveal>
+          <div class="crop-letter">C<br>R</div>
+          <div class="crop-content">
+            <h3>Censorship Resistance</h3>
+            <p>No entity can block your transactions. Payments flow freely through the Curvy protocol regardless of jurisdiction or intermediary.</p>
+          </div>
+        </div>
+        <div class="crop-item" data-reveal>
+          <div class="crop-letter">O</div>
+          <div class="crop-content">
+            <h3>Open Source</h3>
+            <p>Every line of code is public. Verify the protocol yourself. Trust is earned through transparency, not promises.</p>
+          </div>
+        </div>
+        <div class="crop-item" data-reveal>
+          <div class="crop-letter">P</div>
+          <div class="crop-content">
+            <h3>Privacy</h3>
+            <p>Stealth addresses and sparse Merkle trees break the link between your identity and your payments. Even when unshielding, the source is untraceable.</p>
+          </div>
+        </div>
+        <div class="crop-item" data-reveal>
+          <div class="crop-letter">S</div>
+          <div class="crop-content">
+            <h3>Security</h3>
+            <p>Wallet keys stay local. Zero-knowledge proofs validate without revealing. The protocol is designed so that trust is never required.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PRIVACY MODEL ── -->
+  <section class="privacy-section">
+    <div class="container">
+      <div class="section-label">// Privacy Model</div>
+      <div class="privacy-cards">
+        <div class="privacy-card" data-reveal>
+          <h3>Shielded Balances</h3>
+          <p>Funds inside Curvy are encrypted Notes. Only you can decrypt and see your balance. No observer can determine how much you hold or in what currency.</p>
+        </div>
+        <div class="privacy-card" data-reveal>
+          <h3>Private Transfers</h3>
+          <p>Sending between Curvy users is fully private. Sender, recipient, amount, and currency are all hidden behind zero-knowledge proofs.</p>
+        </div>
+        <div class="privacy-card" data-reveal>
+          <h3>Untraceable Unshielding</h3>
+          <p>When funds leave Curvy to a public address, observers see the destination but cannot trace where the funds came from. The link to you is broken.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AGENTCASH FLOW ── -->
+  <section class="flow-section">
+    <div class="container">
+      <div class="section-label">// How it works with AgentCash</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);font-weight:300;max-width:520px;margin-bottom:2rem;">AgentCash makes x402 micropayments to premium APIs. Those payments are transparent. <strong style="color:var(--orange);">crops.cash makes them private.</strong></p>
+      <div class="flow-steps">
+        <div class="flow-step" data-reveal>
+          <div class="flow-num">001</div>
+          <div class="flow-text"><strong>Fund your Curvy wallet</strong> &mdash; deposits are automatically shielded on receipt. Your balance becomes invisible.</div>
+        </div>
+        <div class="flow-step" data-reveal>
+          <div class="flow-arrow">|</div>
+          <div></div>
+        </div>
+        <div class="flow-step" data-reveal>
+          <div class="flow-num">002</div>
+          <div class="flow-text"><strong>Agent needs to call a paid API</strong> &mdash; crops.cash unshields the required USDC to the x402 payment address.</div>
+        </div>
+        <div class="flow-step" data-reveal>
+          <div class="flow-arrow">|</div>
+          <div></div>
+        </div>
+        <div class="flow-step" data-reveal>
+          <div class="flow-num">003</div>
+          <div class="flow-text"><strong>API provider receives payment</strong> &mdash; but cannot link it back to your identity. The source of funds is untraceable.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMMANDS ── -->
+  <section class="commands-section">
+    <div class="container">
+      <div class="section-label">// Commands</div>
+      <div class="commands-grid">
+        <div class="command-card" data-reveal>
+          <div class="cmd-name">onboard</div>
+          <p>Create your shielded wallet. Opens browser for Curvy auth, saves wallet locally at ~/.crops.cash/wallet.json</p>
+        </div>
+        <div class="command-card" data-reveal>
+          <div class="cmd-name">balance</div>
+          <p>View your shielded balances across all networks. Only you can see these &mdash; they're encrypted on-chain.</p>
+        </div>
+        <div class="command-card" data-reveal>
+          <div class="cmd-name">send</div>
+          <p>Send funds privately. To a .curvy.name for full privacy, or to a hex address for untraceable unshielding.</p>
+        </div>
+        <div class="command-card" data-reveal>
+          <div class="cmd-name">info</div>
+          <p>List all supported networks and currencies. Check compatibility before initiating a transfer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMPATIBILITY ── -->
+  <section class="compat-section">
+    <div class="container">
+      <div class="compat-badge">Live Now</div>
+      <h2 class="compat-title">Compatible with <span>AgentCash</span></h2>
+      <p class="compat-desc">x402 API discovery and micropayments &mdash; routed through Curvy's privacy layer. Your agent pays, nobody knows it's you.</p>
+      <p class="compat-coming">More integrations coming soon</p>
+    </div>
+  </section>
+
+  <!-- ── DOCS ── -->
+  <section class="docs-section">
+    <div class="container">
+      <a href="https://docs.curvy.box/" class="docs-link">Read how we achieve privacy through Curvy Protocol</a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <p>crops.cash &mdash; built on <a href="https://curvy.box">Curvy protocol</a> &mdash; ZK-SNARKs &bull; Stealth Addresses &bull; Sparse Merkle Trees</p>
+  </footer>
+
+</div>
+
+<script>
+// ── ASCII WHEAT ANIMATION ──
+(() => {
+  const canvas = document.getElementById('wheat-canvas');
+  if (!canvas) return;
+
+  let cols, rows, frame = 0;
+  const plants = []; // per-column plant data
+
+  function measure() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    cols = Math.floor(w / 8.4);
+    rows = Math.floor(h / 16);
+    plants.length = 0;
+    for (let c = 0; c < cols; c++) {
+      plants.push({
+        phase: Math.random() * 6.28,
+        height: 0.6 + Math.random() * 0.4,   // 60-100% of max height
+        hasGrain: Math.random() > 0.15,        // 85% have grain heads
+        grainLen: 1 + Math.floor(Math.random() * 3), // 1-3 char grain head
+        leafAt: 0.3 + Math.random() * 0.4,    // leaf position on stalk
+        hasLeaf: Math.random() > 0.35,
+      });
+    }
+  }
+
+  function render() {
+    const maxHeight = Math.max(14, Math.floor(rows * 0.65));
+    const grid = [];
+    for (let r = 0; r < maxHeight + 1; r++) {
+      grid.push(new Array(cols).fill(' '));
+    }
+
+    // Ground row
+    for (let c = 0; c < cols; c++) {
+      const g = ['.', ',', '.', "'", '`', '.', ',', '.', ';', '.'];
+      grid[maxHeight][c] = g[c % g.length];
+    }
+
+    // Draw each plant
+    for (let c = 0; c < cols; c++) {
+      const p = plants[c];
+      // Only plant every ~3 cols but with jitter
+      if (c % 3 !== 0 && c % 3 !== (c > cols/2 ? 1 : 0)) continue;
+
+      const h = Math.floor(maxHeight * p.height);
+      if (h < 4) continue;
+
+      // Wind: compound sine for organic feel
+      const wind = Math.sin(frame * 0.03 + c * 0.05 + p.phase)
+                 + 0.3 * Math.sin(frame * 0.07 + c * 0.12 + p.phase * 2);
+
+      // Draw stalk from bottom up
+      for (let i = 0; i < h; i++) {
+        const row = maxHeight - 1 - i;
+        if (row < 0) break;
+
+        // How much this segment sways (more at top)
+        const t = i / h; // 0 at base, 1 at tip
+        const sway = wind * t * t * 2.5;
+        const col = Math.round(c + sway);
+        if (col < 0 || col >= cols) continue;
+
+        if (i === h - 1 && p.hasGrain) {
+          // Grain head (drooping ear) at the very top
+          const droop = wind > 0.3 ? 1 : (wind < -0.3 ? -1 : 0);
+
+          // Main grain kernel
+          if (wind > 0.5) {
+            grid[row][col] = ')';
+            // Drooping grain extends to the side
+            for (let g = 1; g <= p.grainLen; g++) {
+              const gc = col + g;
+              if (gc < cols && grid[row][gc] === ' ') grid[row][gc] = '~';
+            }
+          } else if (wind < -0.5) {
+            grid[row][col] = '(';
+            for (let g = 1; g <= p.grainLen; g++) {
+              const gc = col - g;
+              if (gc >= 0 && grid[row][gc] === ' ') grid[row][gc] = '~';
+            }
+          } else {
+            // Upright or light wind — grain hangs slightly
+            grid[row][col] = 'o';
+            if (row > 0) {
+              const above = row - 1;
+              if (droop === 1 && col+1 < cols && grid[above][col+1] === ' ') grid[above][col+1] = '`';
+              else if (droop === -1 && col-1 >= 0 && grid[above][col-1] === ' ') grid[above][col-1] = '`';
+              else if (grid[above][col] === ' ') grid[above][col] = '.';
+            }
+          }
+        } else if (i >= h - 3 && i < h - 1 && p.hasGrain) {
+          // Upper stalk near grain — thinner
+          if (Math.abs(wind) > 0.4) {
+            grid[row][col] = wind > 0 ? '/' : '\\';
+          } else {
+            grid[row][col] = '|';
+          }
+        } else if (i === 0) {
+          // Base — rooted
+          grid[row][col] = '|';
+        } else {
+          // Stalk body — leans with wind
+          const lean = sway - (wind * (((i-1)/h)**2) * 2.5);
+          const segWind = sway - lean;
+          if (Math.abs(segWind) > 0.3) {
+            grid[row][col] = segWind > 0 ? '/' : '\\';
+          } else {
+            grid[row][col] = '|';
+          }
+
+          // Leaf
+          if (p.hasLeaf && Math.abs(t - p.leafAt) < 0.06) {
+            const leafSide = (c % 2 === 0) ? 1 : -1;
+            const leafDir = leafSide + (wind > 0.3 ? 1 : (wind < -0.3 ? -1 : 0));
+            const lc = col + (leafDir > 0 ? 1 : -1);
+            if (lc >= 0 && lc < cols && grid[row][lc] === ' ') {
+              grid[row][lc] = leafDir > 0 ? '~' : '~';
+            }
+            // Second leaf char for longer leaf
+            const lc2 = col + (leafDir > 0 ? 2 : -2);
+            if (lc2 >= 0 && lc2 < cols && grid[row][lc2] === ' ') {
+              grid[row][lc2] = leafDir > 0 ? '-' : '-';
+            }
+          }
+        }
+      }
+    }
+
+    // Compose output
+    const lines = [];
+    for (let r = 0; r < maxHeight + 1; r++) {
+      lines.push(grid[r].join(''));
+    }
+
+    canvas.textContent = lines.join('\n');
+    frame++;
+    requestAnimationFrame(render);
+  }
+
+  measure();
+  window.addEventListener('resize', measure);
+  render();
+})();
+
+// ── TERMINAL LINE REVEAL ──
+(() => {
+  const terminal = document.getElementById('terminal');
+  const lines = document.querySelectorAll('#terminal-body .line');
+  let revealed = false;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !revealed) {
+        revealed = true;
+        lines.forEach((line, i) => {
+          setTimeout(() => line.classList.add('visible'), i * 180);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(terminal);
+})();
+
+// ── SCROLL REVEAL ──
+(() => {
+  const items = document.querySelectorAll('[data-reveal]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  items.forEach(item => observer.observe(item));
+})();
+
+// ── HIDE SCROLL INDICATOR ON SCROLL ──
+(() => {
+  const indicator = document.querySelector('.scroll-indicator');
+  if (!indicator) return;
+  window.addEventListener('scroll', () => {
+    indicator.classList.toggle('hidden', window.scrollY > 100);
+  }, { passive: true });
+})();
+
+// ── COPY COMMANDS ──
+document.querySelectorAll('#install-cmd, #agent-cmd').forEach(el => {
+  el.addEventListener('click', function() {
+    navigator.clipboard.writeText(this.textContent.trim()).then(() => {
+      const hint = this.nextElementSibling;
+      hint.textContent = 'copied!';
+      setTimeout(() => { hint.textContent = 'click to copy'; }, 2000);
+    });
+  });
+});
+</script>
+
+</body>
+</html>

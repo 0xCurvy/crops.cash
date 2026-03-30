@@ -1,0 +1,25 @@
+{
+  "name": "crops.cash",
+  "version": "0.0.1",
+  "description": "CLI for sending and receiving crypto via the Curvy protocol",
+  "type": "module",
+  "bin": {
+    "crops.cash": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.30.0",
+  "dependencies": {
+    "curvy-mcp": "file:../curvy-mcp",
+    "@inquirer/prompts": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}
