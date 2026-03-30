@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@0xcurvy/curvy-mcp':
+        specifier: ^0.1.0
+        version: 0.1.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@inquirer/prompts':
         specifier: ^7.0.0
         version: 7.10.1(@types/node@25.5.0)
-      curvy-mcp:
-        specifier: file:../curvy-mcp
-        version: file:../curvy-mcp(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
@@ -37,6 +37,9 @@ packages:
     peerDependencies:
       graphql: ^15.5.0 || ^16.0.0 || ^17.0.0
       typescript: ^5.0.0
+
+  '@0xcurvy/curvy-mcp@0.1.0':
+    resolution: {integrity: sha512-Bn8lniuV0czCwlmuFP46opHKZo4iRHJ0R/lKaQGU6cZNtQ+fJhtzIFYU3vfTu/UpTjFWhRYptciWgtdPaLMg3Q==}
 
   '@0xcurvy/curvy-sdk@0.0.6':
     resolution: {integrity: sha512-KJw88H2GCOBc1xvraOu3HPYBOQF69NVfikm6yRgtMYLwMKVmWsQ90vGkCpHlZIOTsqWyebWHgE18NZnVwQ67rA==}
@@ -693,9 +696,6 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
-
-  curvy-mcp@file:../curvy-mcp:
-    resolution: {directory: ../curvy-mcp, type: directory}
 
   dayjs@1.11.20:
     resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
@@ -1440,6 +1440,32 @@ snapshots:
       graphql: 16.13.2
       typescript: 5.9.3
 
+  '@0xcurvy/curvy-mcp@0.1.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+    dependencies:
+      '@0xcurvy/curvy-sdk': 0.0.6(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6)
+      '@modelcontextprotocol/sdk': 1.28.0(zod@4.3.6)
+      cors: 2.8.6
+      dotenv: 17.3.1
+      express: 5.2.1
+      uuid: 13.0.0
+      viem: 2.47.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6)
+      zod: 4.3.6
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@gql.tada/svelte-support'
+      - '@gql.tada/vue-support'
+      - '@solana/wallet-adapter-base'
+      - '@solana/web3.js'
+      - '@types/react'
+      - bufferutil
+      - immer
+      - react
+      - react-native-b4a
+      - supports-color
+      - typescript
+      - use-sync-external-store
+      - utf-8-validate
+
   '@0xcurvy/curvy-sdk@0.0.6(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6)':
     dependencies:
       '@lifi/sdk': 3.16.3(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6))(zod@4.3.6)
@@ -2039,7 +2065,7 @@ snapshots:
 
   '@scure/bip32@1.7.0':
     dependencies:
-      '@noble/curves': 1.9.1
+      '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
 
@@ -2378,32 +2404,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  curvy-mcp@file:../curvy-mcp(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6):
-    dependencies:
-      '@0xcurvy/curvy-sdk': 0.0.6(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6)
-      '@modelcontextprotocol/sdk': 1.28.0(zod@4.3.6)
-      cors: 2.8.6
-      dotenv: 17.3.1
-      express: 5.2.1
-      uuid: 13.0.0
-      viem: 2.47.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6)
-      zod: 4.3.6
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@gql.tada/svelte-support'
-      - '@gql.tada/vue-support'
-      - '@solana/wallet-adapter-base'
-      - '@solana/web3.js'
-      - '@types/react'
-      - bufferutil
-      - immer
-      - react
-      - react-native-b4a
-      - supports-color
-      - typescript
-      - use-sync-external-store
-      - utf-8-validate
 
   dayjs@1.11.20: {}
 

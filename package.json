@@ -15,7 +15,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.30.0",
   "dependencies": {
-    "curvy-mcp": "file:../curvy-mcp",
+    "@0xcurvy/curvy-mcp": "^0.1.0",
     "@inquirer/prompts": "^7.0.0"
   },
   "devDependencies": {
