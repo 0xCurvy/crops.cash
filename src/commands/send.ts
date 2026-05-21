@@ -1,10 +1,10 @@
 import { input, select } from "@inquirer/prompts";
-import { initSDK, tools } from "curvy-mcp/lib";
+import { initSDK, tools } from "@0xcurvy/curvy-mcp/lib";
 import { readWallet } from "../lib/wallet.js";
 
 export async function send(): Promise<void> {
   const { signature } = readWallet();
-  const sdk = await initSDK("testnet", signature);
+  const sdk = await initSDK("mainnet", signature);
 
   const destination = await input({
     message: "Destination (wallet address or name.curvy.name):",
@@ -13,13 +13,13 @@ export async function send(): Promise<void> {
   const networks = sdk.activeNetworks;
   const networkId = await select({
     message: "Network:",
-    choices: networks.map((n) => ({ name: n.name, value: n.id })),
+    choices: networks.map((n: any) => ({ name: n.name, value: n.id })),
   });
 
   const network = sdk.getNetwork(networkId);
   const currencySymbol = await select({
     message: "Currency:",
-    choices: network.currencies.map((c) => ({ name: c.symbol, value: c.symbol })),
+    choices: network.currencies.map((c: any) => ({ name: c.symbol, value: c.symbol })),
   });
 
   const amount = await input({
@@ -32,7 +32,7 @@ export async function send(): Promise<void> {
   console.log("\nSending funds...");
 
   if (isCurvyName) {
-    const sendTool = allTools.find((t) => t.getName() === "curvy-send-funds-internal")!;
+    const sendTool = allTools.find((t: any) => t.getName() === "curvy-send-funds-internal")!;
     const result = await sendTool.execute({
       recipientCurvyName: destination,
       amount,
@@ -43,7 +43,7 @@ export async function send(): Promise<void> {
       console.log(content.text);
     }
   } else {
-    const withdrawTool = allTools.find((t) => t.getName() === "curvy-withdraw-funds")!;
+    const withdrawTool = allTools.find((t: any) => t.getName() === "curvy-withdraw-funds")!;
     const result = await withdrawTool.execute({
       destinationAddress: destination,
       amount,

@@ -16,7 +16,9 @@
   "packageManager": "pnpm@10.30.0",
   "dependencies": {
     "@0xcurvy/curvy-mcp": "^0.1.0",
-    "@inquirer/prompts": "^7.0.0"
+    "@0xcurvy/curvy-sdk": "^0.0.7",
+    "@inquirer/prompts": "^7.0.0",
+    "viem": "^2.49.3"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

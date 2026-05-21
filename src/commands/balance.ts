@@ -1,9 +1,9 @@
-import { initSDK } from "curvy-mcp/lib";
+import { initSDK } from "@0xcurvy/curvy-mcp/lib";
 import { readWallet } from "../lib/wallet.js";
 
 export async function balance(): Promise<void> {
   const { signature } = readWallet();
-  const sdk = await initSDK("testnet", signature);
+  const sdk = await initSDK("mainnet", signature);
 
   const activeWalletId = sdk.walletManager.activeWallet.id;
   const balances = await sdk.storage.getBalances(activeWalletId);
