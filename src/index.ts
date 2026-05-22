@@ -89,21 +89,21 @@ switch (command) {
           args.amount,
           args.token ?? "USDC",
           Number(args.chain ?? "42161"),
-          args.protocol ?? "aave-v3"
+          args.protocol ?? "aave"
         );
         break;
       case "positions":
         await earnPositions();
         break;
       case "withdraw":
-        await earnWithdraw(args.protocol ?? "aave-v3");
+        await earnWithdraw(args.protocol ?? "aave");
         break;
       default:
         console.log("Usage: crops.cash earn <discover|deposit|positions|withdraw>");
         console.log("  discover  --token USDC --chain 42161");
-        console.log("  deposit   --amount 10 --token USDC --chain 42161 --protocol aave-v3");
+        console.log("  deposit   --amount 10 --token USDC --chain 42161 --protocol aave");
         console.log("  positions");
-        console.log("  withdraw  --protocol aave-v3");
+        console.log("  withdraw  --protocol aave");
     }
     break;
   }
