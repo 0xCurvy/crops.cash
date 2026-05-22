@@ -1,5 +1,6 @@
-import { createPublicClient, createWalletClient, http } from "viem";
+import { createPublicClient, http, encodeFunctionData } from "viem";
 import { arbitrum } from "viem/chains";
+import { createGaslessClient } from "./gasless.js";
 
 export type LifiVault = {
   address: string;
@@ -87,28 +88,30 @@ export async function getDepositQuote(vault: LifiVault, fromAddress: string, amo
 
 
 export async function executeQuote(signer: any, quote: any): Promise<string> {
-  const publicClient = createPublicClient({ chain: arbitrum, transport: http("https://arb1.arbitrum.io/rpc") });
-  const walletClient = createWalletClient({ account: signer, chain: arbitrum, transport: http("https://arb1.arbitrum.io/rpc") });
+  const { client: gaslessClient, getAuthorization } = await createGaslessClient(signer);
+  const authorization = await getAuthorization();
 
   const approvalAddress = quote.estimate?.approvalAddress as `0x${string}` | undefined;
   const fromTokenAddress = quote.action?.fromToken?.address as `0x${string}` | undefined;
   if (approvalAddress && fromTokenAddress) {
-    const amount = BigInt(quote.action.fromAmount);
-    const approvalHash = await walletClient.writeContract({
-      account: signer,
-      address: fromTokenAddress,
-      abi: [{ name: "approve", type: "function", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] }] as const,
-      functionName: "approve",
-      args: [approvalAddress, amount],
+    await gaslessClient.sendTransaction({
+      to: fromTokenAddress,
+      data: encodeFunctionData({
+        abi: [{ name: "approve", type: "function", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] }] as const,
+        functionName: "approve",
+        args: [approvalAddress, BigInt(quote.action.fromAmount)],
+      }),
+      value: 0n,
+      ...(authorization && { authorization }),
     });
-    await publicClient.waitForTransactionReceipt({ hash: approvalHash });
   }
 
   const { gasPrice: _gp, maxFeePerGas: _mf, maxPriorityFeePerGas: _mp, ...txRest } = quote.transactionRequest as any;
-  // Strip stale gas price from LiFi quote (it goes stale between quote fetch and submission)
-  // and normalize value — LiFi returns "0x00" which Arbitrum's RPC rejects as non-canonical RLP
-  const txHash = await walletClient.sendTransaction({ ...txRest, value: BigInt(txRest.value ?? 0) });
-  await publicClient.waitForTransactionReceipt({ hash: txHash });
+  const txHash = await gaslessClient.sendTransaction({
+    to: txRest.to,
+    data: txRest.data,
+    value: BigInt(txRest.value ?? 0),
+  });
   return txHash as string;
 }
 
@@ -122,10 +125,6 @@ export async function getTokenBalance(tokenAddress: string, walletAddress: strin
   });
 }
 
-export async function getEthBalance(address: string): Promise<bigint> {
-  const publicClient = createPublicClient({ chain: arbitrum, transport: http("https://arb1.arbitrum.io/rpc") });
-  return publicClient.getBalance({ address: address as `0x${string}` });
-}
 
 const AAVE_V3_POOL: Record<number, `0x${string}`> = {
   42161: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
@@ -137,18 +136,20 @@ export async function withdrawFromAave(underlyingToken: string, signer: any, cha
   const pool = AAVE_V3_POOL[chainId];
   if (!pool) throw new Error(`No Aave v3 pool for chain ${chainId}`);
 
-  const publicClient = createPublicClient({ chain: arbitrum, transport: http("https://arb1.arbitrum.io/rpc") });
-  const walletClient = createWalletClient({ account: signer, chain: arbitrum, transport: http("https://arb1.arbitrum.io/rpc") });
+  const { client: gaslessClient, getAuthorization } = await createGaslessClient(signer);
+  const authorization = await getAuthorization();
 
-  const txHash = await walletClient.writeContract({
-    account: signer,
-    address: pool,
-    abi: [{ name: "withdraw", type: "function", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }, { name: "to", type: "address" }], outputs: [{ name: "", type: "uint256" }] }] as const,
-    functionName: "withdraw",
-    args: [underlyingToken as `0x${string}`, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), recipient as `0x${string}`],
+  const txHash = await gaslessClient.sendTransaction({
+    to: pool,
+    data: encodeFunctionData({
+      abi: [{ name: "withdraw", type: "function", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }, { name: "to", type: "address" }], outputs: [{ name: "", type: "uint256" }] }] as const,
+      functionName: "withdraw",
+      args: [underlyingToken as `0x${string}`, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), recipient as `0x${string}`],
+    }),
+    value: 0n,
+    ...(authorization && { authorization }),
   });
 
-  await publicClient.waitForTransactionReceipt({ hash: txHash });
   return txHash as string;
 }
 

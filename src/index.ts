@@ -115,3 +115,5 @@ switch (command) {
     printUsage();
     break;
 }
+
+process.exit(0);

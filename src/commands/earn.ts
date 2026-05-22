@@ -1,13 +1,11 @@
 import { initSDK, tools } from "@0xcurvy/curvy-mcp/lib";
 import { readWallet } from "../lib/wallet.js";
-import { confirm } from "@inquirer/prompts";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import { deriveEphemeralAddress, recoverEphemeralSigner } from "../lib/ephemeral.js";
 import {
   fetchVaults,
   getDepositQuote,
   executeQuote,
-  getEthBalance,
   getTokenBalance,
   getVaultBalance,
   withdrawFromAave,
@@ -65,21 +63,15 @@ export async function earnDeposit(amount: string, token: string, chainId: number
   }
 
   const PENDING_PATH = path.join(os.homedir(), ".crops.cash", "pending-ephemeral.json");
-  const MIN_GAS = parseUnits("0.0001", 18);
 
-  // Reuse if pending address has ETH for gas OR already has the token (e.g. after a failed deposit)
+  // Reuse pending ephemeral address if it already has the token (e.g. after a failed deposit)
   let ephemeralAddress!: string, R!: string, viewTag!: string;
-  let reusingWithToken = false;
   if (fs.existsSync(PENDING_PATH)) {
     const pending = JSON.parse(fs.readFileSync(PENDING_PATH, "utf-8"));
-    const [pendingEth, pendingToken] = await Promise.all([
-      getEthBalance(pending.ephemeralAddress),
-      getTokenBalance(vault.underlyingToken, pending.ephemeralAddress),
-    ]);
-    if (pendingEth >= MIN_GAS || pendingToken > 0n) {
+    const pendingToken = await getTokenBalance(vault.underlyingToken, pending.ephemeralAddress);
+    if (pendingToken > 0n) {
       ({ ephemeralAddress, R, viewTag } = pending);
-      reusingWithToken = pendingToken > 0n;
-      console.log(`\nReusing funded ephemeral address: ${ephemeralAddress}`);
+      console.log(`\nReusing ephemeral address with existing token balance: ${ephemeralAddress}`);
     }
   }
 
@@ -89,23 +81,6 @@ export async function earnDeposit(amount: string, token: string, chainId: number
   }
 
   console.log(`\nEphemeral address: ${ephemeralAddress}`);
-
-  // When reusing an address that already has the token, any ETH > 0 is enough for the remaining tx
-  const MIN_GAS_REUSE = parseUnits("0.000001", 18);
-  const gasThreshold = reusingWithToken ? MIN_GAS_REUSE : MIN_GAS;
-  const ethBalance = await getEthBalance(ephemeralAddress);
-  if (ethBalance < gasThreshold) {
-    console.log("\n⚠  Ephemeral address needs ETH for gas.");
-    console.log(`   Send at least ${reusingWithToken ? "0.000001" : "0.0001"} ETH on Arbitrum to:`);
-    console.log("   " + ephemeralAddress);
-    console.log("   Arbiscan: https://arbiscan.io/address/" + ephemeralAddress);
-    await confirm({ message: "Press Enter once funded to continue..." });
-
-    const balanceAfter = await getEthBalance(ephemeralAddress);
-    if (balanceAfter < gasThreshold) {
-      throw new Error("Insufficient ETH for gas. Aborting.");
-    }
-  }
 
   const activeWalletId = sdk.walletManager.activeWallet.id;
   const balances = await sdk.storage.getBalances(activeWalletId);
