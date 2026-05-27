@@ -17,7 +17,8 @@ export async function createGaslessClient(signer: any) {
   });
 
   const code = await publicClient.getCode({ address: signer.address });
-  const alreadyDelegated = Boolean(code);
+  // EIP-7702 delegated accounts have code starting with 0xef01; plain EOAs return undefined or '0x'
+  const alreadyDelegated = typeof code === 'string' && code.startsWith('0xef01');
 
   // If 7702 delegation is already set, use as a regular smart account (no authorization needed).
   // If fresh, use 7702 account which will include authorization on first use.

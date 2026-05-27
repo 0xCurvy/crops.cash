@@ -103,8 +103,8 @@ export async function earnDeposit(amount: string, token: string, chainId: number
   }
 
   const ephemeralTokenBalance = await getTokenBalance(vault.underlyingToken, ephemeralAddress);
-  if (ephemeralTokenBalance >= amountInBase) {
-    console.log(`\nEphemeral address already has ${token}, skipping Curvy withdrawal.`);
+  if (ephemeralTokenBalance > 0n) {
+    console.log(`\nEphemeral address already has ${formatUnits(ephemeralTokenBalance, currency.decimals)} ${token}, skipping Curvy withdrawal.`);
   } else {
     console.log("\nWithdrawing from Curvy to ephemeral address...");
     const allTools = tools(sdk);
@@ -132,7 +132,6 @@ export async function earnDeposit(amount: string, token: string, chainId: number
   const actualBalance = await getTokenBalance(vault.underlyingToken, ephemeralAddress);
   const quote = await getDepositQuote(vault, ephemeralAddress, actualBalance);
   const txHash = await executeQuote(signer, quote);
-  const depositedBalance = await getVaultBalance(vault.underlyingToken, ephemeralAddress, vault.chainId);
 
   console.log(`\nDeposit tx: https://arbiscan.io/tx/${txHash}`);
 
@@ -143,7 +142,7 @@ export async function earnDeposit(amount: string, token: string, chainId: number
     vaultAddress: vault.address,
     underlyingToken: vault.underlyingToken,
     chainId: vault.chainId,
-    amount: formatUnits(depositedBalance, 6),
+    amount: formatUnits(actualBalance, 6),
     token,
     depositedAt: new Date().toISOString(),
     ephemeralKey: R,
