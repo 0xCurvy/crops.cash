@@ -6,8 +6,12 @@
   "bin": {
     "crops.cash": "./build/index.js"
   },
+  "files": [
+    "build/"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepare": "tsc",
     "start": "tsc && node build/index.js"
   },
   "keywords": [],
