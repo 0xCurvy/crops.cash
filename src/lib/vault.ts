@@ -72,6 +72,21 @@ export async function fetchVaults(token: string, chainId: number): Promise<LifiV
     .sort((a, b) => b.apy - a.apy);
 }
 
+export async function getWithdrawQuote(vaultAddress: string, underlyingToken: string, chainId: number, fromAddress: string, vaultTokenAmount: bigint): Promise<any> {
+  if (!process.env.LIFI_API_KEY) throw new Error("LIFI_API_KEY is not set");
+  const url = new URL("https://li.quest/v1/quote");
+  url.searchParams.set("fromChain", String(chainId));
+  url.searchParams.set("toChain", String(chainId));
+  url.searchParams.set("fromToken", vaultAddress);
+  url.searchParams.set("toToken", underlyingToken);
+  url.searchParams.set("fromAmount", vaultTokenAmount.toString());
+  url.searchParams.set("fromAddress", fromAddress);
+
+  const response = await fetch(url.toString(), { headers: getLifiHeaders() });
+  await assertResponse(response, url.toString());
+  return response.json();
+}
+
 export async function getDepositQuote(vault: LifiVault, fromAddress: string, amount: bigint): Promise<any> {
   const url = new URL("https://li.quest/v1/quote");
   url.searchParams.set("fromChain", String(vault.chainId));

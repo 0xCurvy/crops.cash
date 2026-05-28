@@ -5,10 +5,9 @@ import { deriveEphemeralAddress, recoverEphemeralSigner } from "../lib/ephemeral
 import {
   fetchVaults,
   getDepositQuote,
+  getWithdrawQuote,
   executeQuote,
   getTokenBalance,
-  getVaultBalance,
-  withdrawFromAave,
 } from "../lib/vault.js";
 import fs from "fs";
 import path from "path";
@@ -167,7 +166,7 @@ export async function earnPositions(): Promise<void> {
   console.log("---------------------------------------------------------------------------");
 
   for (const position of positions) {
-    const currentBalance = await getVaultBalance(position.underlyingToken, position.ephemeralAddress, position.chainId);
+    const currentBalance = await getTokenBalance(position.vaultAddress, position.ephemeralAddress);
     const depositedAmount = parseUnits(position.amount, 6);
     const yieldAmount = currentBalance > depositedAmount ? currentBalance - depositedAmount : BigInt(0);
 
@@ -189,9 +188,11 @@ export async function earnWithdraw(protocol: string): Promise<void> {
   const { signature } = readWallet();
   const sdk = await initSDK("mainnet", signature);
   const signer = await recoverEphemeralSigner(sdk, position.ephemeralKey, position.viewTag);
-  const currentBalance = await getVaultBalance(position.underlyingToken, position.ephemeralAddress, position.chainId);
-  const txHash = await withdrawFromAave(position.underlyingToken, signer, position.chainId, position.ephemeralAddress);
+  const vaultTokenBalance = await getTokenBalance(position.vaultAddress, position.ephemeralAddress);
+  const quote = await getWithdrawQuote(position.vaultAddress, position.underlyingToken, position.chainId, position.ephemeralAddress, vaultTokenBalance);
+  const txHash = await executeQuote(signer, quote);
 
+  const currentBalance = BigInt(quote.estimate?.toAmount ?? "0");
   const depositedAmount = parseUnits(position.amount, 6);
   const yieldAmount = currentBalance > depositedAmount ? currentBalance - depositedAmount : BigInt(0);
 
