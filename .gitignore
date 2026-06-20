@@ -13,3 +13,9 @@ node_modules/
 
 ### Env ###
 .env
+
+### npm lockfile (project uses pnpm) ###
+package-lock.json
+check-balances.mjs
+debug-ephemeral.mjs
+recover-eth.mjs

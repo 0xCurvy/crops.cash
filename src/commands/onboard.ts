@@ -1,5 +1,5 @@
 import { confirm } from "@inquirer/prompts";
-import { runAuthFlow } from "curvy-mcp/lib";
+import { runAuthFlow } from "@0xcurvy/curvy-mcp/lib";
 import { walletExists, WALLET_PATH } from "../lib/wallet.js";
 
 export async function onboard(): Promise<void> {

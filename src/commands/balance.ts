@@ -1,9 +1,9 @@
-import { initSDK } from "curvy-mcp/lib";
+import { initSDK } from "@0xcurvy/curvy-mcp/lib";
 import { readWallet } from "../lib/wallet.js";
 
 export async function balance(): Promise<void> {
   const { signature } = readWallet();
-  const sdk = await initSDK("testnet", signature);
+  const sdk = await initSDK("mainnet", signature);
 
   const activeWalletId = sdk.walletManager.activeWallet.id;
   const balances = await sdk.storage.getBalances(activeWalletId);
@@ -16,13 +16,15 @@ export async function balance(): Promise<void> {
   const result: Record<string, string> = {};
 
   for (const b of balances) {
-    for (const network of sdk.activeNetworks) {
-      const currency = network.currencies.find((c: any) => c.symbol === b.symbol);
-      if (currency) {
-        const key = `${network.name}.${b.symbol}`;
-        const existing = result[key] ? BigInt(result[key]) : BigInt(0);
-        result[key] = (existing + b.balance).toString();
-      }
+    const network = sdk.activeNetworks.find(
+      (n: any) => n.name.replace(" ", "-").toLowerCase() === b.networkSlug
+    );
+    if (!network) continue;
+    const currency = network.currencies.find((c: any) => c.symbol === b.symbol);
+    if (currency) {
+      const key = `${network.name}.${b.symbol}`;
+      const existing = result[key] ? BigInt(result[key]) : BigInt(0);
+      result[key] = (existing + b.balance).toString();
     }
   }
 

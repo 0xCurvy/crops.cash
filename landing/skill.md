@@ -1,14 +1,14 @@
 ---
 name: crops-cash
-description: Privacy layer for crypto payments. Funds are shielded inside the Curvy protocol — when a payment is needed (e.g. x402 via AgentCash), crops.cash unshields funds to the destination, breaking the link between the user's identity and the payment.
+description: Privacy layer for crypto payments and yield farming. Funds are shielded inside the Curvy protocol — crops.cash lets you earn yield on shielded assets via Aave without revealing your identity, and send private payments (e.g. x402 via AgentCash) with an untraceable source.
 homepage: https://crops.cash
 metadata:
-  version: 1
+  version: 2
 ---
 
 # Crops.cash
 
-Crops.cash is a privacy-first CLI for crypto payments via the Curvy protocol. All funds held through Curvy are **shielded** — hidden behind zero-knowledge proofs so that balances, ownership, and transaction history are completely private.
+Crops.cash is a privacy-first CLI for crypto payments and yield farming via the Curvy protocol. All funds held through Curvy are **shielded** — hidden behind zero-knowledge proofs so that balances, ownership, and transaction history are completely private.
 
 ## Privacy Model
 
@@ -17,6 +17,7 @@ Curvy uses ZK-SNARKs, stealth addresses, and sparse Merkle trees to provide priv
 - **Shielded balances**: Funds inside Curvy are encrypted Notes. Only the owner can decrypt and see their balance. No one else can see how much you hold or in what currency.
 - **Private transfers**: Sending between Curvy users (`.curvy.name`) is fully private — sender, recipient, amount, and currency are all hidden.
 - **Unshielding**: When funds leave Curvy to a public address, observers can see the destination and amount, but **cannot trace where the funds came from**. The link to the original owner is broken.
+- **Ephemeral addresses**: For yield farming, funds flow through one-time ephemeral addresses derived from the user's Curvy keypair. These addresses are used once and are not linkable to the user's identity. Transactions are gasless via EIP-7702 — no ETH required.
 
 ## How It Works with AgentCash
 
@@ -47,12 +48,23 @@ This opens a browser window to `https://app.curvy.box/auth` for authentication. 
 
 If the user runs any other command without onboarding, they will be prompted to onboard automatically.
 
+### Environment Variables (required for earn)
+
+For the earn (yield farming) commands, two API keys are required. Export them in your shell before running commands:
+
+```bash
+export LIFI_API_KEY=<your LiFi API key>       # https://portal.li.fi
+export PIMLICO_API_KEY=<your Pimlico API key> # https://dashboard.pimlico.io
+```
+
+These keys are not needed for `balance` or `send`.
+
 ## Commands
 
 ### Check Supported Networks & Currencies
 
 ```bash
-npx crops.cash@latest supported
+npx crops.cash@latest info
 ```
 
 ### Check Balances
@@ -74,6 +86,42 @@ npx crops.cash@latest send
 - To send privately to a Curvy user: enter their `.curvy.name` address (e.g., `alice.curvy.name`) — fully private transfer
 - To unshield to an external wallet: enter the wallet address (hex string) — destination is public but source is untraceable
 
+### Earn (Private Yield Farming)
+
+Earn yield on shielded assets without revealing your identity. Funds flow through ephemeral addresses. All transactions are gasless — no ETH required.
+
+**Discover yield opportunities:**
+
+```bash
+npx crops.cash@latest earn discover --token USDC --chain 42161
+```
+
+Lists available vaults sorted by APY (protocol, APY %, TVL, chain).
+
+**Deposit into a vault:**
+
+```bash
+npx crops.cash@latest earn deposit --amount 1 --token USDC --chain 42161 --protocol aave
+```
+
+Flow: Curvy unshields USDC to a fresh ephemeral address → gasless ERC-20 approve → gasless Aave deposit via Pimlico EIP-7702. No ETH needed.
+
+**View open positions:**
+
+```bash
+npx crops.cash@latest earn positions
+```
+
+Shows deposited amount, current balance (including accrued yield), and yield earned per position.
+
+**Withdraw from a vault:**
+
+```bash
+npx crops.cash@latest earn withdraw --protocol aave
+```
+
+Gasless Aave withdraw. Funds return to the ephemeral address. Position is closed and removed from local state. Note: reshielding back into Curvy is not yet automated — the withdrawn funds remain at the ephemeral address until manually reshielded.
+
 ## Triggers
 
 Use this skill when the user wants to:
@@ -84,6 +132,10 @@ Use this skill when the user wants to:
 - See which networks and currencies are supported
 - Set up or reset their Curvy wallet
 - Unshield funds to a specific address for a payment
+- Earn yield on crypto privately (yield farming, DeFi deposits)
+- Deposit into Aave or other protocols without revealing identity
+- Check open yield positions or earned interest
+- Withdraw from a yield protocol back to a private wallet
 
 ## Non-Interactive Usage (for Agents)
 
